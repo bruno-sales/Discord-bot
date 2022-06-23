@@ -4,9 +4,10 @@ import random
 import requests
 from io import BytesIO
 from imgurpython import ImgurClient
+from discord.ext import commands
 
 # Discord client
-client = discord.Client()
+client = commands.Bot(command_prefix="%")
 
 # Imgur Client
 client_imgur_id = 'My id'
@@ -19,44 +20,61 @@ async def on_message(message):
     if message.author == client.user:
         return
 
-    if message.content.startswith('%juan'):
-        await message.channel.send('Juan.')
+    await client.process_commands(message)
 
-    if message.content.startswith('%help'):
-        await message.channel.send(get_help())
 
-    if message.content.startswith('%parrot'):
-        reply = message.content[7:]
-        await message.channel.send(reply)
+@client.command()
+async def juan(ctx):
+    await ctx.channel.send('Juan.')
 
-    if message.content.startswith('%calc'):
-        equation = message.content[5:]
-        try:
-            result = calculate(equation)
-            await message.channel.send(str(result) + '\nHave you really asked a horse to do math?')
-        except:
-            await message.channel.send('I cannot do that!\nHave you really asked a horse to do math?')
 
-    if message.content.startswith('%simp'):
-        query = message.content[5:].replace(" ", "+")
-        img_url, found = get_random_image(query, False)
-        await message.channel.send(img_url)
+@client.command()
+async def parrot(ctx, message):
+    await ctx.channel.send(message)
 
-    if message.content.startswith('%ssimp'):
-        query = message.content[6:].replace(" ", "+")
-        img, found = get_random_image(query, True)
-        if found:
-            await message.channel.send(file=discord.File(img, 'SPOILER_spoilerimg.png'))
-        else:
-            await message.channel.send(img)
+
+@client.command()
+async def helpme(ctx):
+    await ctx.channel.send(get_help())
+
+
+@client.command()
+async def calc(ctx, message):
+    try:
+        result = calculate(message)
+        await ctx.channel.send(str(result) + '\nHave you really asked a horse to do math?')
+    except:
+        await ctx.channel.send('I cannot do that!\nHave you really asked a horse to do math?')
+
+
+@client.command()
+async def simp(ctx, message):
+    query = message.replace(" ", "+")
+    img_url, found = get_random_image(query, False)
+    await ctx.channel.send(img_url)
+
+
+@client.command(name="ssimp")
+async def spoiler_simp(ctx, message):
+    query = message.replace(" ", "+")
+    img, found = get_random_image(query, True)
+    if found:
+        await ctx.channel.send(file=discord.File(img, 'SPOILER_spoilerimg.png'))
+    else:
+        await ctx.channel.send(img)
+
+
+@client.event
+async def on_ready():
+    await client.change_presence(activity=discord.Game('What the dog doin?'))
 
 
 def get_help():
-    help = '**help**: Haven''t you just done that?\n' \
+    help = '**helpme**: Haven''t you just done that?\n' \
            '**juan**: Juan?\n' \
            '**parrot**: Repeats what you said. Just because.\n' \
            '**simp**: Grabs a random image from the interwebs.\n' \
-           '**ssimp**: Grabs a random image from the interwebs and displays as a spoiler.\n' \
+           '**ssimp**: Grabs a random image from the interwebs and displays as spoiler.\n' \
            '**calc**: Quick maths.\n'
     return help
 
